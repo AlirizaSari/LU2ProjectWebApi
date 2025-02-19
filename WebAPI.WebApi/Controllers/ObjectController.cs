@@ -24,7 +24,7 @@ public class ObjectController : ControllerBase
         return Ok(objects);
     }
 
-    [HttpGet("[controller]/{objectId:guid}", Name = "ReadObject")]
+    [HttpGet("[controller]/{objectId}", Name = "ReadObject")]
     public async Task<ActionResult<Object2D>> Get(Guid objectId)
     {
         var objects = await _objectRepository.ReadAsync(objectId);
@@ -34,7 +34,7 @@ public class ObjectController : ControllerBase
         return Ok(objects);
     }
 
-    [HttpGet("{environmentId:guid}", Name = "ReadObjectsByEnvironment")]
+    [HttpGet("{environmentId}", Name = "ReadObjectsByEnvironment")]
     public async Task<ActionResult<IEnumerable<Object2D>>> GetByEnvironment(Guid environmentId)
     {
         var objects = await _objectRepository.ReadByEnvironmentIdAsync(environmentId);
@@ -45,13 +45,12 @@ public class ObjectController : ControllerBase
     public async Task<ActionResult<Object2D>> Add(Guid environmentId, Object2D obj)
     {
         obj.Id = Guid.NewGuid();
-        obj.EnvironmentId = environmentId;
 
         var createdObject = await _objectRepository.InsertAsync(obj);
         return CreatedAtRoute("ReadObject", new { objectId = createdObject.Id }, createdObject);
     }
 
-    [HttpPut("[controller]/{objectId:guid}", Name = "UpdateObject")]
+    [HttpPut("[controller]/{objectId}", Name = "UpdateObject")]
     public async Task<ActionResult> Update(Guid objectId, Object2D newObject)
     {
         var existingObject = await _objectRepository.ReadAsync(objectId);
@@ -59,12 +58,13 @@ public class ObjectController : ControllerBase
         if (existingObject == null)
             return NotFound($"Object with id {objectId} not found.");
 
+        newObject.Id = objectId;
         await _objectRepository.UpdateAsync(newObject);
 
         return Ok(newObject);
     }
 
-    [HttpDelete("[controller]/{objectId:guid}", Name = "DeleteObject")]
+    [HttpDelete("[controller]/{objectId}", Name = "DeleteObject")]
     public async Task<IActionResult> Delete(Guid objectId)
     {
         var existingObject = await _objectRepository.ReadAsync(objectId);

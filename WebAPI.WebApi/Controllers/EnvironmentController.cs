@@ -20,11 +20,11 @@ public class EnvironmentController : ControllerBase
     [HttpGet(Name = "ReadEnvironments")]
     public async Task<ActionResult<IEnumerable<Environment2D>>> Get()
     {
-        var environments = await _environmentRepository.ReadAsync();
+        var environments = await _environmentRepository.ReadAllAsync();
         return Ok(environments);
     }
 
-    [HttpGet("{environmentId:guid}", Name = "ReadEnvironment")]
+    [HttpGet("{environmentId}", Name = "ReadEnvironment")]
     public async Task<ActionResult<Environment2D>> Get(Guid environmentId)
     {
         var environment = await _environmentRepository.ReadAsync(environmentId);
@@ -43,7 +43,7 @@ public class EnvironmentController : ControllerBase
         return CreatedAtRoute("ReadEnvironment", new { environmentId = createdEnvironment.Id }, createdEnvironment);
     }
 
-    [HttpPut("{environmentId:guid}", Name = "UpdateEnvironment")]
+    [HttpPut("{environmentId}", Name = "UpdateEnvironment")]
     public async Task<ActionResult> Update(Guid environmentId, Environment2D newEnvironment)
     {
         var existingEnvironment = await _environmentRepository.ReadAsync(environmentId);
@@ -51,12 +51,14 @@ public class EnvironmentController : ControllerBase
         if (existingEnvironment == null)
             return NotFound($"Environment with id {environmentId} not found.");
 
+        newEnvironment.Id = environmentId;
         await _environmentRepository.UpdateAsync(newEnvironment);
 
         return Ok(newEnvironment);
     }
 
-    [HttpDelete("{environmentId:guid}", Name = "DeleteEnvironment")]
+
+    [HttpDelete("{environmentId}", Name = "DeleteEnvironment")]
     public async Task<IActionResult> Delete(Guid environmentId)
     {
         var existingEnvironment = await _environmentRepository.ReadAsync(environmentId);

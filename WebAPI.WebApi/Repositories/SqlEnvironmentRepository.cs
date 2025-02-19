@@ -31,7 +31,7 @@ public class SqlEnvironmentRepository : IEnvironmentRepository
         }
     }
 
-    public async Task<IEnumerable<Environment2D>> ReadAsync()
+    public async Task<IEnumerable<Environment2D>> ReadAllAsync()
     {
         using (var sqlConnection = new SqlConnection(sqlConnectionString))
         {
@@ -43,7 +43,7 @@ public class SqlEnvironmentRepository : IEnvironmentRepository
     {
         using (var sqlConnection = new SqlConnection(sqlConnectionString))
         {
-            await sqlConnection.ExecuteAsync("UPDATE [Environment2D] SET Name = @Name, OwnerUserId = @OwnerUserId, MaxLength = @MaxLength, MaxHeight = @MaxHeight WHERE Id = @Id", environment);
+            await sqlConnection.ExecuteAsync("UPDATE [Environment2D] SET Name = @Name, OwnerUserId = @OwnerUserId, MaxLength = @MaxLength, MaxHeight = @MaxHeight WHERE Id = @id", environment);
         }
     }
 
