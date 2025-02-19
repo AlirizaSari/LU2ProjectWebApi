@@ -1,4 +1,4 @@
-using ProjectLU2.WebApi.Repositories;
+﻿using ProjectLU2.WebApi.Repositories;
 using System.Data;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -12,14 +12,14 @@ builder.Services.AddOpenApi();
 builder.Services.Configure<RouteOptions>(o => o.LowercaseUrls = true);
 
 var sqlConnectionString = builder.Configuration["SqlConnectionString"];
-
-if (string.IsNullOrWhiteSpace(sqlConnectionString))
-    throw new InvalidProgramException("Configuration variable SqlConnectionString not found");
+var sqlConnectionStringFound = !string.IsNullOrWhiteSpace(sqlConnectionString);
 
 builder.Services.AddTransient<IEnvironmentRepository, SqlEnvironmentRepository>(o => new SqlEnvironmentRepository(sqlConnectionString));
 builder.Services.AddTransient<IObjectRepository, ObjectRepository>(o => new ObjectRepository(sqlConnectionString));
 
 var app = builder.Build();
+
+app.MapGet("/", () => $"The API is up 🚀\nConnection string found: {(sqlConnectionStringFound ? "✅" : "❌")}");
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
