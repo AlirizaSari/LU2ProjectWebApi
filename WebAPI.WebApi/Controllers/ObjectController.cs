@@ -42,16 +42,17 @@ public class ObjectController : ControllerBase
     }
 
     [HttpPost("{environmentId:guid}/[controller]", Name = "CreateObject")]
-    public async Task<ActionResult<Object2D>> Add(Object2D obj)
+    public async Task<ActionResult<Object2D>> Add(Guid environmentId, Object2D obj)
     {
         obj.Id = Guid.NewGuid();
+        obj.EnvironmentId = environmentId;
 
         var createdObject = await _objectRepository.InsertAsync(obj);
         return CreatedAtRoute("ReadObject", new { objectId = createdObject.Id }, createdObject);
     }
 
     [HttpPut("{environmentId:guid}/[controller]/{objectId:guid}", Name = "UpdateObject")]
-    public async Task<ActionResult> Update(Guid objectId, [FromBody] Object2D newObject)
+    public async Task<ActionResult> Update(Guid objectId, Object2D newObject)
     {
         var existingObject = await _objectRepository.ReadAsync(objectId);
 
