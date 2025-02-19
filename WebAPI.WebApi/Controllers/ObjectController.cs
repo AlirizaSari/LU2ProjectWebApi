@@ -9,11 +9,13 @@ namespace ProjectLU2.WebApi.Controllers;
 public class ObjectController : ControllerBase
 {
     private readonly IObjectRepository _objectRepository;
+    private readonly IEnvironmentRepository _environmentRepository;
     private readonly ILogger<ObjectController> _logger;
 
-    public ObjectController(IObjectRepository objectRepository, ILogger<ObjectController> logger)
+    public ObjectController(IObjectRepository objectRepository, IEnvironmentRepository environmentRepository, ILogger<ObjectController> logger)
     {
         _objectRepository = objectRepository;
+        _environmentRepository = environmentRepository;
         _logger = logger;
     }
 
@@ -41,10 +43,11 @@ public class ObjectController : ControllerBase
         return Ok(objects);
     }
 
-    [HttpPost("[controller]", Name = "CreateObject")]
+    [HttpPost("[controller]/{environmentId}", Name = "CreateObject")]
     public async Task<ActionResult<Object2D>> Add(Guid environmentId, Object2D obj)
     {
         obj.Id = Guid.NewGuid();
+        obj.EnvironmentId = environmentId;
 
         var createdObject = await _objectRepository.InsertAsync(obj);
         return CreatedAtRoute("ReadObject", new { objectId = createdObject.Id }, createdObject);
@@ -58,7 +61,13 @@ public class ObjectController : ControllerBase
         if (existingObject == null)
             return NotFound($"Object with id {objectId} not found.");
 
+        var existingEnvironment = await _environmentRepository.ReadAsync(existingObject.EnvironmentId);
+        if (existingEnvironment == null)
+            return NotFound($"Environment with id {existingObject.EnvironmentId} not found.");
+
         newObject.Id = objectId;
+        newObject.EnvironmentId = existingObject.EnvironmentId;
+
         await _objectRepository.UpdateAsync(newObject);
 
         return Ok(newObject);
