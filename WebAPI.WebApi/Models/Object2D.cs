@@ -33,5 +33,6 @@ namespace ProjectLU2.WebApi.Models
 
         [Required]
         public int SortingLayer { get; set; }
+
     }
 }
