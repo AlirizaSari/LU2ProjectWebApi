@@ -1,10 +1,12 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using ProjectLU2.WebApi.Models;
 using ProjectLU2.WebApi.Repositories;
 
 namespace ProjectLU2.WebApi.Controllers;
 
 [ApiController]
+[Authorize]
 [Route("environments")]
 public class ObjectController : ControllerBase
 {
