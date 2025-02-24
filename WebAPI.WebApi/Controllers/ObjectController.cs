@@ -28,7 +28,7 @@ public class ObjectController : ControllerBase
         return Ok(objects);
     }
 
-    [HttpGet("[controller]/{objectId}", Name = "ReadObject")]
+    [HttpGet("[controller]/object/{objectId}", Name = "ReadObject")]
     public async Task<ActionResult<Object2D>> Get(Guid objectId)
     {
         var objects = await _objectRepository.ReadAsync(objectId);
@@ -38,14 +38,14 @@ public class ObjectController : ControllerBase
         return Ok(objects);
     }
 
-    [HttpGet("{environmentId}", Name = "ReadObjectsByEnvironment")]
+    [HttpGet("[controller]/environment/{environmentId}", Name = "ReadObjectsByEnvironment")]
     public async Task<ActionResult<IEnumerable<Object2D>>> GetByEnvironment(Guid environmentId)
     {
         var objects = await _objectRepository.ReadByEnvironmentIdAsync(environmentId);
         return Ok(objects);
     }
 
-    [HttpPost("[controller]/{environmentId}", Name = "CreateObject")]
+    [HttpPost("[controller]/environment/{environmentId}", Name = "CreateObject")]
     public async Task<ActionResult<Object2D>> Add(Guid environmentId, Object2D obj)
     {
         obj.Id = Guid.NewGuid();
@@ -55,7 +55,7 @@ public class ObjectController : ControllerBase
         return CreatedAtRoute("ReadObject", new { objectId = createdObject.Id }, createdObject);
     }
 
-    [HttpPut("[controller]/{objectId}", Name = "UpdateObject")]
+    [HttpPut("[controller]/object/{objectId}", Name = "UpdateObject")]
     public async Task<ActionResult> Update(Guid objectId, Object2D newObject)
     {
         var existingObject = await _objectRepository.ReadAsync(objectId);
@@ -75,7 +75,7 @@ public class ObjectController : ControllerBase
         return Ok(newObject);
     }
 
-    [HttpDelete("[controller]/{objectId}", Name = "DeleteObject")]
+    [HttpDelete("[controller]/object/{objectId}", Name = "DeleteObject")]
     public async Task<IActionResult> Delete(Guid objectId)
     {
         var existingObject = await _objectRepository.ReadAsync(objectId);

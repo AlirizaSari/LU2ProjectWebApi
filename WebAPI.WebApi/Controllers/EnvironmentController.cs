@@ -56,6 +56,7 @@ public class EnvironmentController : ControllerBase
             return NotFound($"Environment with id {environmentId} not found.");
 
         newEnvironment.Id = environmentId;
+        newEnvironment.OwnerUserId = existingEnvironment.OwnerUserId;
         await _environmentRepository.UpdateAsync(newEnvironment);
 
         return Ok(newEnvironment);
