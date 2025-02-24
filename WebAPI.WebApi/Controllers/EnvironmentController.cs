@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Mvc;
 using ProjectLU2.WebApi.Models;
 using ProjectLU2.WebApi.Repositories;
+using System.Security.Claims;
 
 namespace ProjectLU2.WebApi.Controllers;
 
@@ -40,6 +41,7 @@ public class EnvironmentController : ControllerBase
     public async Task<ActionResult> Add(Environment2D environment)
     {
         environment.Id = Guid.NewGuid();
+        environment.OwnerUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
 
         var createdEnvironment = await _environmentRepository.InsertAsync(environment);
         return CreatedAtRoute("ReadEnvironment", new { environmentId = createdEnvironment.Id }, createdEnvironment);
