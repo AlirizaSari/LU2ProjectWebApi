@@ -37,6 +37,19 @@ public class EnvironmentController : ControllerBase
         return Ok(environment);
     }
 
+    // Read all environments for the current user
+    [HttpGet("user/{ownerUserId}", Name = "ReadUserEnvironments")]
+    public async Task<ActionResult<IEnumerable<Environment2D>>> GetUserEnvironments()
+    {
+        var ownerUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (ownerUserId == null)
+        {
+            return BadRequest($"Environment with user id {ownerUserId} not found.");
+        }
+        var environments = await _environmentRepository.ReadByUserIdAsync(ownerUserId);
+        return Ok(environments);
+    }
+
     [HttpPost(Name = "CreateEnvironment")]
     public async Task<ActionResult> Add(Environment2D environment)
     {
