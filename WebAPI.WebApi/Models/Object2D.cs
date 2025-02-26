@@ -14,7 +14,7 @@ namespace ProjectLU2.WebApi.Models
 
         [Required]
         [StringLength(50)]
-        public string PrefabId { get; set; } = string.Empty;
+        public string PrefabId { get; set; }
 
         [Required]
         public float PositionX { get; set; }
