@@ -20,7 +20,9 @@ namespace ProjectLU2.WebApi.Models
         [Range(20, 200, ErrorMessage = "MaxLength moet tussen 20 en 200 liggen.")]
         public int? MaxLength { get; set; }
 
-        [Range(20, 200, ErrorMessage = "MaxHeight moet tussen 20 en 200")]
+        [Range(10, 100, ErrorMessage = "MaxHeight moet tussen 10 en 100")]
         public int? MaxHeight { get; set; }
+
+
     }
 }
