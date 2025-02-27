@@ -50,6 +50,17 @@ public class EnvironmentController : ControllerBase
         if (userId == null)
             return Unauthorized();
 
+        var userEnvironments = await _environmentRepository.ReadByUserIdAsync(userId);
+        if (userEnvironments.Count() >= Environment2D.MaxNumberOfEnvironments)
+        {
+            return BadRequest($"You cannot create more than {Environment2D.MaxNumberOfEnvironments} environments.");
+        }
+
+        if (userEnvironments.Any(e => e.Name == environment.Name))
+        {
+            return BadRequest("An environment with the same name already exists.");
+        }
+
         environment.Id = Guid.NewGuid();
         environment.OwnerUserId = userId;
 
@@ -71,6 +82,7 @@ public class EnvironmentController : ControllerBase
 
         newEnvironment.Id = environmentId;
         newEnvironment.OwnerUserId = userId;
+        newEnvironment.Name = existingEnvironment.Name;
         await _environmentRepository.UpdateAsync(newEnvironment);
 
         return Ok(newEnvironment);
