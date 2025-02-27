@@ -39,11 +39,11 @@ public class SqlEnvironmentRepository : IEnvironmentRepository
         }
     }
 
-    public async Task<IEnumerable<Environment2D>> ReadByUserIdAsync(string ownerUserId)
+    public async Task<IEnumerable<Environment2D>> ReadByUserIdAsync(string userId)
     {
         using (var sqlConnection = new SqlConnection(sqlConnectionString))
         {
-            return await sqlConnection.QueryAsync<Environment2D>("SELECT * FROM [Environment2D] WHERE OwnerUserId = @OwnerUserId", new { ownerUserId });
+            return await sqlConnection.QueryAsync<Environment2D>("SELECT * FROM [Environment2D] WHERE OwnerUserId = @OwnerUserId", new { OwnerUserId = userId });
         }
     }
 

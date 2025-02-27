@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Authorization;
+﻿using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using ProjectLU2.WebApi.Models;
 using ProjectLU2.WebApi.Repositories;
@@ -12,18 +13,23 @@ namespace ProjectLU2.WebApi.Controllers;
 public class EnvironmentController : ControllerBase
 {
     private readonly IEnvironmentRepository _environmentRepository;
+    private readonly IAuthenticationService _authenticationService;
     private readonly ILogger<EnvironmentController> _logger;
 
-    public EnvironmentController(IEnvironmentRepository environmentRepository, ILogger<EnvironmentController> logger)
+    public EnvironmentController(IEnvironmentRepository environmentRepository, IAuthenticationService authenticationService, ILogger<EnvironmentController> logger)
     {
         _environmentRepository = environmentRepository;
+        _authenticationService = authenticationService;
         _logger = logger;
     }
 
     [HttpGet(Name = "ReadEnvironments")]
     public async Task<ActionResult<IEnumerable<Environment2D>>> Get()
     {
-        var environments = await _environmentRepository.ReadAllAsync();
+        var userId = _authenticationService.GetCurrentAuthenticatedUserId();
+        if (userId == null)
+            return Unauthorized();
+        var environments = await _environmentRepository.ReadByUserIdAsync(userId);
         return Ok(environments);
     }
 
@@ -37,24 +43,15 @@ public class EnvironmentController : ControllerBase
         return Ok(environment);
     }
 
-    // Read all environments for the current user
-    [HttpGet("user/{ownerUserId}", Name = "ReadUserEnvironments")]
-    public async Task<ActionResult<IEnumerable<Environment2D>>> GetUserEnvironments()
-    {
-        var ownerUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-        if (ownerUserId == null)
-        {
-            return BadRequest($"Environment with user id {ownerUserId} not found.");
-        }
-        var environments = await _environmentRepository.ReadByUserIdAsync(ownerUserId);
-        return Ok(environments);
-    }
-
     [HttpPost(Name = "CreateEnvironment")]
     public async Task<ActionResult> Add(Environment2D environment)
     {
+        var userId = _authenticationService.GetCurrentAuthenticatedUserId();
+        if (userId == null)
+            return Unauthorized();
+
         environment.Id = Guid.NewGuid();
-        environment.OwnerUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        environment.OwnerUserId = userId;
 
         var createdEnvironment = await _environmentRepository.InsertAsync(environment);
         return CreatedAtRoute("ReadEnvironment", new { environmentId = createdEnvironment.Id }, createdEnvironment);
@@ -63,13 +60,17 @@ public class EnvironmentController : ControllerBase
     [HttpPut("{environmentId}", Name = "UpdateEnvironment")]
     public async Task<ActionResult> Update(Guid environmentId, Environment2D newEnvironment)
     {
+        var userId = _authenticationService.GetCurrentAuthenticatedUserId();
+        if (userId == null)
+            return Unauthorized();
+
         var existingEnvironment = await _environmentRepository.ReadAsync(environmentId);
 
         if (existingEnvironment == null)
             return NotFound($"Environment with id {environmentId} not found.");
 
         newEnvironment.Id = environmentId;
-        newEnvironment.OwnerUserId = existingEnvironment.OwnerUserId;
+        newEnvironment.OwnerUserId = userId;
         await _environmentRepository.UpdateAsync(newEnvironment);
 
         return Ok(newEnvironment);

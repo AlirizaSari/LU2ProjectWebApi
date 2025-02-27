@@ -17,7 +17,7 @@ builder.Services
     .AddIdentityApiEndpoints<IdentityUser>(options =>
     {
         options.User.RequireUniqueEmail = true;
-        options.Password.RequiredLength = 8;
+        options.Password.RequiredLength = 10;
         options.Password.RequireDigit = true;
         options.Password.RequireUppercase = true;
         options.Password.RequireLowercase = true;
@@ -53,6 +53,9 @@ var sqlConnectionStringFound = !string.IsNullOrWhiteSpace(sqlConnectionString);
 
 builder.Services.AddTransient<IEnvironmentRepository, SqlEnvironmentRepository>(o => new SqlEnvironmentRepository(sqlConnectionString));
 builder.Services.AddTransient<IObjectRepository, ObjectRepository>(o => new ObjectRepository(sqlConnectionString));
+
+builder.Services.AddHttpContextAccessor();
+builder.Services.AddTransient<IAuthenticationService, AspNetIdentityAuthenticationService>();
 
 var app = builder.Build();
 
