@@ -92,13 +92,16 @@ public class EnvironmentController : ControllerBase
     [HttpDelete("{environmentId}", Name = "DeleteEnvironment")]
     public async Task<IActionResult> Delete(Guid environmentId)
     {
-        var existingEnvironment = await _environmentRepository.ReadAsync(environmentId);
+        var userId = _authenticationService.GetCurrentAuthenticatedUserId();
+        if (userId == null)
+            return Unauthorized();
 
+        var existingEnvironment = await _environmentRepository.ReadAsync(environmentId);
         if (existingEnvironment == null)
             return NotFound($"Environment with id {environmentId} not found.");
 
         await _environmentRepository.DeleteAsync(environmentId);
-
         return Ok();
     }
+
 }
