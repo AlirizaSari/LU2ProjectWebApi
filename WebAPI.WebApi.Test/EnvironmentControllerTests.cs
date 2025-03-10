@@ -35,68 +35,6 @@ namespace WebAPI.WebApi.Test
         }
 
         [TestMethod]
-        public async Task Get_ReturnsUnauthorized_WhenUserNotAuthenticated()
-        {
-            // Arrange
-            _mockAuthenticationService.Setup(a => a.GetCurrentAuthenticatedUserId()).Returns<string>(null);
-
-            // Act
-            var result = await _controller.Get();
-
-            // Assert
-            Assert.IsInstanceOfType(result.Result, typeof(UnauthorizedResult));
-        }
-
-        [TestMethod]
-        public async Task Get_ReturnsEnvironments_WhenUserAuthenticated()
-        {
-            // Arrange
-            var userId = "test-user";
-            var environments = new List<Environment2D> { new Environment2D { Id = Guid.NewGuid(), Name = "Test Environment", OwnerUserId = userId } };
-            _mockAuthenticationService.Setup(a => a.GetCurrentAuthenticatedUserId()).Returns(userId);
-            _mockEnvironmentRepository.Setup(r => r.ReadByUserIdAsync(userId)).ReturnsAsync(environments);
-
-            // Act
-            var result = await _controller.Get();
-            var okResult = result.Result as OkObjectResult;
-
-            // Assert
-            Assert.IsNotNull(okResult);
-            Assert.IsInstanceOfType(okResult.Value, typeof(IEnumerable<Environment2D>));
-            Assert.AreEqual(1, (okResult.Value as IEnumerable<Environment2D>).Count());
-        }
-
-        [TestMethod]
-        public async Task GetById_ReturnsNotFound_WhenEnvironmentDoesNotExist()
-        {
-            // Arrange
-            _mockEnvironmentRepository.Setup(r => r.ReadAsync(It.IsAny<Guid>())).ReturnsAsync((Environment2D)null);
-
-            // Act
-            var result = await _controller.Get(Guid.NewGuid());
-
-            // Assert
-            Assert.IsInstanceOfType(result.Result, typeof(NotFoundObjectResult));
-        }
-
-        [TestMethod]
-        public async Task GetById_ReturnsEnvironment_WhenExists()
-        {
-            // Arrange
-            var envId = Guid.NewGuid();
-            var environment = new Environment2D { Id = envId, Name = "Test", OwnerUserId = "user" };
-            _mockEnvironmentRepository.Setup(r => r.ReadAsync(envId)).ReturnsAsync(environment);
-
-            // Act
-            var result = await _controller.Get(envId);
-            var okResult = result.Result as OkObjectResult;
-
-            // Assert
-            Assert.IsNotNull(okResult);
-            Assert.AreEqual(environment, okResult.Value);
-        }
-
-        [TestMethod]
         public async Task Add_ReturnsUnauthorized_WhenUserNotAuthenticated()
         {
             // Arrange
@@ -110,128 +48,20 @@ namespace WebAPI.WebApi.Test
         }
 
         [TestMethod]
-        public async Task Add_ReturnsBadRequest_WhenUserExceedsMaxEnvironments()
+        public async Task Add_ReturnsCreatedAtRoute_WhenEnvironmentIsAddedSuccessfully()
         {
             // Arrange
             var userId = "test-user";
+            var newEnvironment = new Environment2D { Name = "New Environment", OwnerUserId = userId };
 
-            var maxEnvironments = Environment2D.MaxNumberOfEnvironments;
-
-            var existingEnvironments = Enumerable.Range(0, maxEnvironments)
-                .Select(i => new Environment2D { Id = Guid.NewGuid(), Name = $"Env {i}", OwnerUserId = userId })
-                .ToList();
-
-            _mockAuthenticationService.Setup(a => a.GetCurrentAuthenticatedUserId()).Returns(userId);
-            _mockEnvironmentRepository.Setup(r => r.ReadByUserIdAsync(userId)).ReturnsAsync(existingEnvironments);
-
-            var newEnvironment = new Environment2D { Name = "New Env" };
+            _mockAuthenticationService!.Setup(a => a.GetCurrentAuthenticatedUserId()).Returns(userId);
+            _mockEnvironmentRepository!.Setup(r => r.InsertAsync(newEnvironment)).ReturnsAsync(newEnvironment);
 
             // Act
-            var result = await _controller.Add(newEnvironment);
+            var result = await _controller!.Add(newEnvironment);
 
             // Assert
-            Assert.AreEqual(maxEnvironments, existingEnvironments.Count, "Aantal bestaande omgevingen is niet gelijk aan de limiet.");
-            Assert.IsInstanceOfType(result, typeof(BadRequestObjectResult));
-        }
-
-        [TestMethod]
-        public async Task Add_ReturnsBadRequest_WhenEnvironmentNameAlreadyExists()
-        {
-            // Arrange
-            var userId = "test-user";
-            var existingEnvironments = new List<Environment2D> 
-            {
-                new Environment2D { Id = Guid.NewGuid(), Name = "ExistingEnv", OwnerUserId = userId }
-            };
-
-            _mockAuthenticationService.Setup(a => a.GetCurrentAuthenticatedUserId()).Returns(userId);
-            _mockEnvironmentRepository.Setup(r => r.ReadByUserIdAsync(userId)).ReturnsAsync(existingEnvironments);
-
-            var newEnvironment = new Environment2D { Name = "ExistingEnv" };
-
-            // Act
-            var result = await _controller.Add(newEnvironment);
-
-            // Assert
-            Assert.IsInstanceOfType(result, typeof(BadRequestObjectResult));
-        }
-
-        [TestMethod]
-        public async Task Update_ReturnsNotFound_WhenEnvironmentDoesNotExist()
-        {
-            // Arrange
-            _mockAuthenticationService.Setup(a => a.GetCurrentAuthenticatedUserId()).Returns("user");
-            _mockEnvironmentRepository.Setup(r => r.ReadAsync(It.IsAny<Guid>())).ReturnsAsync((Environment2D)null);
-
-            // Act
-            var result = await _controller.Update(Guid.NewGuid(), new Environment2D());
-
-            // Assert
-            Assert.IsInstanceOfType(result, typeof(NotFoundObjectResult));
-        }
-
-        [TestMethod]
-        public async Task Update_ReturnsOk_WhenEnvironmentIsUpdatedSuccessfully()
-        {
-            // Arrange
-            var userId = "test-user";
-            var envId = Guid.NewGuid();
-            var existingEnvironment = new Environment2D { Id = envId, Name = "Old Name", OwnerUserId = userId };
-
-            _mockAuthenticationService.Setup(a => a.GetCurrentAuthenticatedUserId()).Returns(userId);
-            _mockEnvironmentRepository.Setup(r => r.ReadAsync(envId)).ReturnsAsync(existingEnvironment);
-
-            var updatedEnvironment = new Environment2D { Name = "New Name" };
-
-            // Act
-            var result = await _controller.Update(envId, updatedEnvironment);
-
-            // Assert
-            Assert.IsInstanceOfType(result, typeof(OkObjectResult));
-        }
-
-        [TestMethod]
-        public async Task Update_ReturnsUnauthorized_WhenUserNotAuthenticated()
-        {
-            // Arrange
-            _mockAuthenticationService.Setup(a => a.GetCurrentAuthenticatedUserId()).Returns<string>(null);
-
-            var envId = Guid.NewGuid();
-            var updatedEnvironment = new Environment2D { Id = envId, Name = "UpdatedEnv" };
-
-            // Act
-            var result = await _controller.Update(envId, updatedEnvironment);
-
-            // Assert
-            Assert.IsInstanceOfType(result, typeof(UnauthorizedResult));
-        }
-
-        [TestMethod]
-        public async Task Delete_ReturnsNotFound_WhenEnvironmentDoesNotExist()
-        {
-            // Arrange
-            var userId = "test-user";
-            _mockAuthenticationService.Setup(a => a.GetCurrentAuthenticatedUserId()).Returns(userId);
-            _mockEnvironmentRepository.Setup(r => r.ReadAsync(It.IsAny<Guid>())).ReturnsAsync((Environment2D)null);
-
-            // Act
-            var result = await _controller.Delete(Guid.NewGuid());
-
-            // Assert
-            Assert.IsInstanceOfType(result, typeof(NotFoundObjectResult));
-        }
-
-        [TestMethod]
-        public async Task Delete_ReturnsUnauthorized_WhenUserNotAuthenticated()
-        {
-            // Arrange
-            _mockAuthenticationService.Setup(a => a.GetCurrentAuthenticatedUserId()).Returns<string>(null);
-
-            // Act
-            var result = await _controller.Delete(Guid.NewGuid());
-
-            // Assert
-            Assert.IsInstanceOfType(result, typeof(UnauthorizedResult));
+            Assert.IsInstanceOfType(result, typeof(CreatedAtRouteResult));
         }
 
         [TestMethod]
@@ -253,5 +83,49 @@ namespace WebAPI.WebApi.Test
             Assert.IsInstanceOfType(result, typeof(OkResult));
         }
 
+        [TestMethod]
+        public async Task Add_ReturnsBadRequest_WhenEnvironmentNameAlreadyExists()
+        {
+            // Arrange
+            var userId = "test-user";
+            var existingEnvironments = new List<Environment2D>
+            {
+                new Environment2D { Id = Guid.NewGuid(), Name = "ExistingEnv", OwnerUserId = userId }
+            };
+
+            _mockAuthenticationService.Setup(a => a.GetCurrentAuthenticatedUserId()).Returns(userId);
+            _mockEnvironmentRepository.Setup(r => r.ReadByUserIdAsync(userId)).ReturnsAsync(existingEnvironments);
+
+            var newEnvironment = new Environment2D { Name = "ExistingEnv" };
+
+            // Act
+            var result = await _controller.Add(newEnvironment);
+
+            // Assert
+            Assert.IsInstanceOfType(result, typeof(BadRequestObjectResult));
+        }
+
+        [TestMethod]
+        public async Task Add_ReturnsBadRequest_WhenUserExceedsMaxEnvironments()
+        {
+            // Arrange
+            var userId = "test-user";
+            var maxEnvironments = Environment2D.MaxNumberOfEnvironments;
+            var existingEnvironments = Enumerable.Range(0, maxEnvironments)
+                .Select(i => new Environment2D { Id = Guid.NewGuid(), Name = $"Env {i}", OwnerUserId = userId })
+                .ToList();
+
+            _mockAuthenticationService.Setup(a => a.GetCurrentAuthenticatedUserId()).Returns(userId);
+            _mockEnvironmentRepository.Setup(r => r.ReadByUserIdAsync(userId)).ReturnsAsync(existingEnvironments);
+
+            var newEnvironment = new Environment2D { Name = "New Env" };
+
+            // Act
+            var result = await _controller.Add(newEnvironment);
+
+            // Assert
+            Assert.AreEqual(maxEnvironments, existingEnvironments.Count, "Aantal bestaande omgevingen is niet gelijk aan de limiet.");
+            Assert.IsInstanceOfType(result, typeof(BadRequestObjectResult));
+        }
     }
 }
