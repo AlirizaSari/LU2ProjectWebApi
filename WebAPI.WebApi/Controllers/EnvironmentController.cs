@@ -29,6 +29,8 @@ public class EnvironmentController : ControllerBase
         var userId = _authenticationService.GetCurrentAuthenticatedUserId();
         if (userId == null)
             return Unauthorized();
+
+
         var environments = await _environmentRepository.ReadByUserIdAsync(userId);
         return Ok(environments);
     }
@@ -36,9 +38,13 @@ public class EnvironmentController : ControllerBase
     [HttpGet("{environmentId}", Name = "ReadEnvironment")]
     public async Task<ActionResult<Environment2D>> Get(Guid environmentId)
     {
+        var userId = _authenticationService.GetCurrentAuthenticatedUserId();
+        if (userId == null)
+            return Unauthorized();
+
         var environment = await _environmentRepository.ReadAsync(environmentId);
-        if (environment == null)
-            return NotFound($"Environment with id {environmentId} not found.");
+        if (environment == null || environment.OwnerUserId != userId)
+            return NotFound($"Environment with id {environmentId} not found in your account.");
 
         return Ok(environment);
     }
@@ -80,6 +86,15 @@ public class EnvironmentController : ControllerBase
         if (existingEnvironment == null)
             return NotFound($"Environment with id {environmentId} not found.");
 
+        if (existingEnvironment.OwnerUserId != userId)
+            return Unauthorized();
+
+        var userEnvironments = await _environmentRepository.ReadByUserIdAsync(userId);
+        if (userEnvironments.Any(e => e.Name == newEnvironment.Name && e.Id != environmentId))
+        {
+            return BadRequest("An environment with the same name already exists.");
+        }
+
         newEnvironment.Id = environmentId;
         newEnvironment.OwnerUserId = userId;
         newEnvironment.Name = existingEnvironment.Name;
@@ -100,8 +115,11 @@ public class EnvironmentController : ControllerBase
         if (existingEnvironment == null)
             return NotFound($"Environment with id {environmentId} not found.");
 
+        if (existingEnvironment.OwnerUserId != userId)
+            return Unauthorized();
+
         await _environmentRepository.DeleteAsync(environmentId);
+
         return Ok();
     }
-
 }
